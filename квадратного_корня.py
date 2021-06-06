@@ -1,52 +1,48 @@
 import numpy as np
+from math import sqrt
 
 
-n = int(input('Количество неизвестных: '))
-k = int(input('Количество итераций: '))
-
-a = np.zeros((n,n))
-b = np.zeros(n)
-
-a= [[20, 2, 3, 7],
-[1, 12, -2, -5],
-[5, -3, 13, 0],
-[0, 0, -3, 15]]
-
-b=[5, 4, -3, 7]
-
-#for i in range(n):
-#   for j in range(n):
-#        a[i][j] = float(input( 'a['+str(i)+']['+ str(j)+']='))
-#
-#for i in range(n):
-#        b[i] = float(input( 'b['+str(i)+']='))
+def cholesky(A):
+    L = [[0.0] * len(A) for _ in range(len(A))]
+    for i, (Ai, Li) in enumerate(zip(A, L)):
+        for j, Lj in enumerate(L[:i+1]):
+            s = sum(Li[k] * Lj[k] for k in range(j))
+            Li[j] = sqrt(Ai[i] - s) if (i == j) else \
+                      (1.0 / Lj[j] * (Ai[j] - s))
+    return L
 
 
-def f(n, a, b, k):
-    x = np.zeros(n)
+a= [[10, 2,  1],
+          [2, 10,  3,],
+          [1, 3, 10]]
 
-    for i in range(k):
-        for j in range(n):
-            x[j]=b[j]
-            for l in range(j):
-                x[j]-=x[l]*a[j][l]
-            for l in range(j+1, n):
-                x[j]-=x[l]*a[j][l]
-            x[j]=x[j]/a[j][j]
-        print(x)
-    
-        
-    return x
+b=[12, 13, 14]
 
-x=f(n, np.array(a), np.array(b), k)
+n=len(b)
 
-# Displaying solution
-print('Теперь известные элементы: ')
+t=np.array((cholesky(a)))
+tt=t.transpose()
+
+y=[0]*n
+x=[0]*n
+
+y[0]=b[0]/t[0][0]
+for i in range(1, n):
+    s = 0;
+    for k in range(0, i):
+        s  += t[i][k]*y[k]
+    y[i] = (b[i] - s)/t[i][i]
+
+
+x[n-1]=y[n-1]/tt[n-1][n-1]
+for i in range(n-2, -1, -1):
+    ss=0
+    for k in range(n-1, i, -1):
+        ss = ss+ tt[i][k]*x[k]
+    x[i] = (y[i] - ss)/tt[i][i]
+
+print("x:")
 for i in range(n):
-    print('X%d = %0.2f' %(i,x[i]), end = '\t')
-print('\n')
-print(np.linalg.solve(a, b))
+    print("x", i, "=", x[i])
 
-# метод простых итераций и метод Зейделя почти идентичны. 
-# Разница лишь в том, что в методе Зейделя расчет вектора приближений на текущей итерации происходит с использованием данных,
-# полученных ни только на предыдущей, но и на нынешней итерации. 
+print(np.linalg.solve(a, b))
